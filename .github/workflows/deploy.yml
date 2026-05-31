@@ -2,89 +2,73 @@ name: Deploy Cloud Frequencies
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
-      - "container/**"   # only run when container code changes
+      - "container/**"
 
 env:
-  PROJECT_ID:   strata-493811
-  REGION:       asia-south1
-  REPO:         cloud-frequencies-repo
-  IMAGE_NAME:   cloud-frequencies
-  PULUMI_STACK: Cetyl/container/dev
+  PROJECT_ID:                  strata-493811
+  REGION:                      asia-south1
+  SERVICE_NAME:                cloud-frequencies
+  IMAGE:                       asia-south1-docker.pkg.dev/strata-493811/cloud-frequencies-repo/cloud-frequencies
+  WORKLOAD_IDENTITY_PROVIDER:  projects/1054687717606/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+  SERVICE_ACCOUNT:             github-deploy-sa@strata-493811.iam.gserviceaccount.com
 
 jobs:
   deploy:
-    name: Build → Push → Deploy
+    name: Build & Deploy
     runs-on: ubuntu-latest
 
-    # Workload Identity Federation — no long-lived service account keys stored in GitHub.
-    # The job authenticates to GCP using a short-lived OIDC token instead.
-    # Terraform equivalent: google_iam_workload_identity_pool + provider
     permissions:
       contents: read
-      id-token: write     # required for OIDC token exchange
+      id-token: write
 
     steps:
-
-      # ── 1. Checkout ──────────────────────────────────────────────
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ── 2. Authenticate to GCP via Workload Identity ─────────────
-      # No JSON key. GitHub's OIDC token is exchanged for a short-lived
-      # GCP access token bound to the deploy service account.
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account:            ${{ secrets.GCP_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ env.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account:            ${{ env.SERVICE_ACCOUNT }}
 
-      # ── 3. Set up Docker for Artifact Registry ───────────────────
-      - name: Configure Docker
-        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
 
-      # ── 4. Derive image tag from git SHA (first 8 chars) ─────────
-      # Short SHA gives us a unique, traceable tag per commit.
-      # No more manual v1, v2, v3... — every push gets its own tag.
-      - name: Set image tag
-        id: tag
-        run: echo "TAG=sha-$(git rev-parse --short=8 HEAD)" >> $GITHUB_OUTPUT
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker asia-south1-docker.pkg.dev --quiet
 
-      # ── 5. Build & push multi-platform image ─────────────────────
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context:    ./container/app
-          platforms:  linux/amd64
-          provenance: false
-          push:       true
-          tags:       ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO }}/${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.TAG }}
-          cache-from: type=gha
-          cache-to:   type=gha,mode=max
-
-      # ── 6. Update Pulumi config with new image tag ───────────────
-      - name: Install Pulumi
-        uses: pulumi/actions@v5
-
-      - name: Update image tag in Pulumi config
-        working-directory: container
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      - name: Build Docker image
         run: |
-          pulumi config set container:image '{"name":"${{ env.IMAGE_NAME }}","tag":"${{ steps.tag.outputs.TAG }}"}' \
-            --stack ${{ env.PULUMI_STACK }}
+          docker build \
+            --platform linux/amd64 \
+            --tag ${{ env.IMAGE }}:${{ github.sha }} \
+            --tag ${{ env.IMAGE }}:latest \
+            ./container/app
 
-      # ── 7. Deploy via Pulumi ──────────────────────────────────────
-      - name: Deploy
-        uses: pulumi/actions@v5
-        with:
-          command:      up
-          stack-name:   ${{ env.PULUMI_STACK }}
-          work-dir:     container
-          refresh:      true
-        env:
-          PULUMI_ACCESS_TOKEN: ${{ secrets.PULUMI_ACCESS_TOKEN }}
+      - name: Push Docker image
+        run: |
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image=${{ env.IMAGE }}:${{ github.sha }} \
+            --platform=managed \
+            --region=${{ env.REGION }} \
+            --service-account=cloud-run-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com \
+            --allow-unauthenticated \
+            --port=8080 \
+            --project=${{ env.PROJECT_ID }}
+
+      - name: Health check
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} \
+            --format="value(status.url)")
+          curl --fail "${URL}/health"
+          echo "✅ Live at ${URL}"
