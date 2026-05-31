@@ -13,8 +13,8 @@
     <style>
         /* ── Cloud Frequencies overrides ───────────────────────── */
 
-        /* Slightly darker overlay so our UI pops */
-        #bg { opacity: 0.25; }
+        /* Background opacity — high enough to see the images */
+        #bg { opacity: 0.5; }
 
         /* Header */
         #header h1 {
@@ -69,12 +69,14 @@
             font-size: 0.9em;
             letter-spacing: 0.15em;
             text-transform: uppercase;
+            text-align: center;
             background: transparent;
             border: 2px solid rgba(255,255,255,0.5);
             color: #fff;
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.3s, border-color 0.3s;
+            display: block;
         }
         #generate-btn:hover:not(:disabled) {
             background: rgba(255,255,255,0.1);
@@ -232,7 +234,7 @@
     </header>
 
     <!-- Main form area -->
-    <div id="main-area">
+    <div id="main-area" style="max-width:480px; width:100%;">
 
         <!-- Upload view -->
         <div id="upload-view">
