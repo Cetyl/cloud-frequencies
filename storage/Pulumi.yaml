@@ -1,0 +1,4 @@
+name: storage
+runtime:
+  name: nodejs
+description: Storage infrastructure for Cloud Frequencies

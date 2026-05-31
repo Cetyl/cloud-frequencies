@@ -1,0 +1,14 @@
+config:
+  gcp:project: strata-493811
+
+  container:region: asia-south1
+
+  container:artifactRegistry:
+    repository: cloud-frequencies-repo
+
+  container:image:
+    name: cloud-frequencies
+    tag: v12
+
+  container:cloudRun:
+    serviceName: cloud-frequencies

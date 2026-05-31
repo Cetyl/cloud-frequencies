@@ -1,0 +1,4 @@
+name: container
+runtime:
+  name: nodejs
+description: Container infrastructure for Cloud Frequencies

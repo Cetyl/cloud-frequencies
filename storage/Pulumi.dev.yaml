@@ -1,0 +1,7 @@
+config:
+  gcp:project: strata-493811
+
+  storage:region: ASIA-SOUTH1
+
+  storage:bucketNames:
+    assets: cloud-frequencies-assets-dev

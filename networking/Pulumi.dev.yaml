@@ -1,0 +1,15 @@
+config:
+  gcp:project: strata-493811
+
+  networking:region: asia-south1
+
+  networking:vpc:
+    name: cloud-frequencies-vpc
+
+  networking:subnet:
+    name: cloud-frequencies-subnet
+    cidr: 10.10.0.0/24
+
+  networking:vpcConnector:
+    name: cf-vpc-connector
+    cidr: 10.8.0.0/28
