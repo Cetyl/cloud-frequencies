@@ -65,18 +65,21 @@
         /* ── Generate button — reuse template button styles ── */
         #generate-btn {
             width: 100%;
-            padding: 0.85em;
+            padding: 0.9em 1em;
             font-size: 0.9em;
-            letter-spacing: 0.15em;
+            font-family: inherit;
+            letter-spacing: 0.2em;
             text-transform: uppercase;
-            text-align: center;
             background: transparent;
             border: 2px solid rgba(255,255,255,0.5);
             color: #fff;
             border-radius: 4px;
             cursor: pointer;
             transition: background 0.3s, border-color 0.3s;
-            display: block;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
         }
         #generate-btn:hover:not(:disabled) {
             background: rgba(255,255,255,0.1);
