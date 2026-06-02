@@ -12,7 +12,7 @@ Gemini 2.5 Flash analyses the audio, detects genre and mood, maps it to an iconi
 
 ```
 Browser
-  └── cloudfrequencies.strata-app.online (GoDaddy DNS → Static IP 8.233.69.95)
+  └── cloudfrequencies.strata-app.online (GoDaddy DNS → GCP Global Static IP)
         └── Global External Application Load Balancer
               ├── HTTP (port 80)  → redirect to HTTPS
               └── HTTPS (port 443) → Google-managed SSL cert

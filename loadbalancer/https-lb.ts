@@ -25,7 +25,7 @@ const ipName =
 |--------------------------------------------------------------------------
 | Static IP — already reserved manually
 |--------------------------------------------------------------------------
-| The IP 8.233.69.95 was reserved before this stack existed.
+| The static IP was reserved before this stack existed.
 | Referenced as a data source — Pulumi reads it, does not manage lifecycle.
 | Terraform equivalent: data "google_compute_global_address"
 */
