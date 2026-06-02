@@ -1,0 +1,10 @@
+config:
+  gcp:project: strata-493811
+
+  loadbalancer:region: asia-south1
+
+  loadbalancer:domain: cloudfrequencies.strata-app.online
+
+  # Name of the static IP already reserved in GCP.
+  # Address: 8.233.69.95
+  loadbalancer:ipName: cloud-frequencies-ip
