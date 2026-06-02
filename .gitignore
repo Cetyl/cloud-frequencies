@@ -1,2 +1,8 @@
 /bin/
 /node_modules/
+
+# Never commit secrets or local env files
+.env
+.env.*
+*.pem
+*.json.key
