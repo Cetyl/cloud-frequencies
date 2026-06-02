@@ -10,6 +10,8 @@ Gemini 2.5 Flash analyses the audio, detects genre and mood, maps it to an iconi
 
 ## Architecture
 
+![Cloud Frequencies GCP Architecture](./architecture.png)
+
 ```
 Browser
   └── cloudfrequencies.strata-app.online (GoDaddy DNS → GCP Global Static IP)
